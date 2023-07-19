@@ -33,7 +33,15 @@ int main(int argc, char *argv[])
         stat(name,&sobj);
         if(S_ISREG(sobj.st_mode))
         {
-           printf("File name : %s File size : %ld \n",name,sobj.st_size);
+           printf("File name : %s File size : %ld File Mode : %d\n",name,sobj.st_size,sobj.st_mode);
+        }
+        else if(S_ISDIR(sobj.st_mode))
+        {
+            printf("File name : %s File size : %ld File Mode : %d\n",name,sobj.st_size,sobj.st_mode);
+        }
+        else if(S_ISLNK(sobj.st_mode))
+        {
+            printf("File name : %s File size : %ld File Mode : %d\n",name,sobj.st_size,sobj.st_mode);
         }
     }
 
