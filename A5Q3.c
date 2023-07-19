@@ -1,42 +1,88 @@
-//Write a program which accept directory name from user and write information of all regular
+//Write a program which accept directory name form user and write information of all regular
 //file in and then read the contents from that file.
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<unistd.h>
-#include<fcntl.h>
-#include<dirent.h>
-#include<sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-int main(int argc, char *argv[])
+void listRegularFiles(const char *directory, const char *outputFile) 
 {
-    char DirName[20];
     DIR *dp = NULL;
     struct dirent *entry = NULL;
-    char name[30];
     struct stat sobj;
+    int fd = 0;
 
-    printf("Enter name of directory : \n");
-    scanf("%s",DirName);
-
-    dp = opendir(DirName);
-    if(dp == NULL)
+    // Open the directory
+    dp = opendir(directory);
+    if (dp == NULL) 
     {
-        printf("Unable to open directory\n");
-        return -1;
+        printf("Error opening directory\n");
+        return;
     }
 
-    while((entry = readdir(dp)) != NULL)
+    // Open the output file for writing
+    fd = open(outputFile, O_WRONLY | O_CREAT);
+    if (fd == -1) 
     {
-        sprintf(name,"%s/%s",DirName,entry->d_name);
-        stat(name,&sobj);
-        if(S_ISREG(sobj.st_mode))
+        printf("Error opening output file\n");
+        closedir(dp);
+        return;
+    }
+
+    // Loop through the directory entries
+    while ((entry = readdir(dp)) != NULL) 
+    {
+        char filePath[1024];
+        snprintf(filePath, sizeof(filePath), "%s/%s", directory, entry->d_name);
+
+        // Get file stats
+        if (stat(filePath, &sobj) == 0) 
         {
-           printf("File name : %s File size : %ld \n",name,sobj.st_size);
+            // Check if it's a regular file
+            if (S_ISREG(sobj.st_mode)) 
+            {
+                // Write file name and size to the output file
+                dprintf(fd, "%s - %ld bytes - iNode No -%ld\n", entry->d_name, sobj.st_size, sobj.st_ino);
+
+                // Open the file for reading
+                int fd2 = open(filePath, O_RDONLY);
+                if (fd2 == -1) 
+                {
+                    perror("Error opening file for reading");
+                    close(fd);
+                    closedir(dp);
+                    return;
+                }
+
+                // Read and print the file contents
+                char buffer[4096];
+                ssize_t bytesRead;
+                while ((bytesRead = read(fd2, buffer, sizeof(buffer))) > 0) 
+                {
+                    write(STDOUT_FILENO, buffer, bytesRead); // Print contents to stdout
+                }
+
+                close(fd2);
+            }
         }
     }
 
+    close(fd);
     closedir(dp);
-    
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        printf("Usage: %s <directory_name> <output_file_name>\n", argv[0]);
+        return 1;
+    }
+
+    const char *directory = argv[1];
+    const char *outputFile = argv[2];
+
+    listRegularFiles(directory, outputFile);
+
     return 0;
 }
