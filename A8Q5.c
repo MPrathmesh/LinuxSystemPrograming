@@ -1,0 +1,1 @@
+//Write a program which is used to create daemon process
