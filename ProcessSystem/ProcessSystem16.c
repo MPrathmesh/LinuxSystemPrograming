@@ -17,7 +17,6 @@ int main()
     {
         printf("Parent is running with PID : %d\n", getpid());
         sleep(10);
-        
     }
 
     return 0;
