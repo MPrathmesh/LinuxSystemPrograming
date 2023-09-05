@@ -20,7 +20,5 @@ int main()
     {
         execl("./Process2","NULL",NULL);
     }
-    
-
     return 0;
 }
